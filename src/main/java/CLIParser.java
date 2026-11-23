@@ -25,11 +25,11 @@ public class CLIParser {
             );
         }
 
-        if (args[0] == null || args[0].isBlank()) {
-            throw new IllegalArgumentException("Filename cannot be empty.");
+        if (args[0] == null || args[0].isBlank() || args[0].isEmpty()) {
+            throw new IllegalArgumentException("Filename/Path is either empty, does not exist, or just spaces");
         }
 
-        this.file           = Path.of(args[0]); //TODO(shenukp1) Nov 23, 2026: check if this file exist within a filepath specified
+        this.file           = Path.of(args[0]);
         this.wMinFilled     = parseNonNegativeInt(args[1], "Wminfilled");
         this.wPref          = parseNonNegativeInt(args[2], "Wpref");
         this.wPair          = parseNonNegativeInt(args[3], "Wpair");

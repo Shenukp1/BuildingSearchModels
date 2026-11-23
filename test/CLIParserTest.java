@@ -11,7 +11,6 @@ class CLIParserTest {
     void parsesValidArgs() {
         String[] args = {"input.txt", "0", "1", "2", "3", "4", "5", "6", "7"};
         CLIParser parser = new CLIParser(args);
-
         assertEquals(Path.of("input.txt"), parser.getFile());
         assertEquals(0, parser.getWMinFilled());
         assertEquals(1, parser.getWPref());
@@ -27,7 +26,6 @@ class CLIParserTest {
     void rejectsTooFewArgs() {
         // see <https://docs.junit.org/6.1.3/writing-tests/exception-handling.html> how to test exceptions
         String[] args = {"input.txt", "1", "2", "3"};
-
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> { new CLIParser(args); });
         assertTrue(e.getMessage().contains("Usage: java SetBasedSearch"));
     }
@@ -35,7 +33,6 @@ class CLIParserTest {
     @Test
     void rejectsTooManyArgs() {
         String[] args = {"input.txt", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> new CLIParser(args));
         assertTrue(e.getMessage().contains("Usage: java SetBasedSearch"));
     }
@@ -61,8 +58,7 @@ class CLIParserTest {
     @Test
     void rejectsBlankFilename() {
         String[] args = {"", "1", "2", "3", "4", "5", "6", "7", "8"};
-
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> new CLIParser(args));
-        assertTrue(e.getMessage().contains("Filename cannot be empty"));
+        assertTrue(e.getMessage().contains("Filename/Path is either"));
     }
 }
