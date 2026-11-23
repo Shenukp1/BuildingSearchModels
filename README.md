@@ -8,16 +8,21 @@ This project contains code that build the implementation for the search model X(
 
 ## Usage
 
-### Testing
+### Running Search Model Program
+
+Showcases how to run the set based search model. The following CLI command requires two types of inputs, one of them being
+an text file(i.e., `input.txt`) and the rest being integer parameters.
+
 ```bash
-./run.sh test                    # run all tests
-./run.sh test MyTest             # run one test class
+./run.sh SetBasedSearch filename Wminfilled Wpref Wpair Wsecdiff pen_lecturemin pen_tutorialmin pen_notpaired pen_section
 ```
+- SetBasedSearch is the name of the java file(i.e., `SetBasedSearch.java`) that contains a main function, which is the main entry point to run the program.
 
-### Running a file
 
-TODO(shenukp1) Oct 26, 2026: It is probably the case we have a main file that runs everything so we
-should make that the default when we run `./run.sh run`.
+### Running Java File Generally
+
+Showcases how to run a java file generally. As in, following the instructions below, you can run any java file of
+your choosing.
 
 ```bash
 ./run.sh run my.package.MyClass  # run a class with a main method
@@ -25,4 +30,14 @@ should make that the default when we run `./run.sh run`.
 
 - `my.package` is only relevant if we create a directory within `src/main/java`. For example if we added a file
 within `src/main/java/package/fileName.java`, then it would be the case we would need to do `./run.sh run package.fileName`.
+
+TODO(shenukp1) Oct 26, 2026: It is probably the case we have a main file that runs everything so we
+should make that the default when we run `./run.sh run`.
+
+### Testing
+```bash
+./run.sh test                    # run all tests
+./run.sh test MyTest             # run one test class
+```
+
 
