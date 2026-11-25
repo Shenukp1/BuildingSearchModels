@@ -1,4 +1,3 @@
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,12 +7,23 @@ import java.nio.file.Path;
  * Parses the input file given to the program to start the set based search on.
  */
 public class InputFileParser {
-    Path filePath;
+    public static final String NAME = "Name:";
+    public static final String LECTURE_SLOTS = "Lecture slots:";
+    public static final String TUTORIAL_SLOTS = "Tutorial slots:";
+    public static final String LECTURES = "Lectures:";
+    public static final String TUTORIALS = "Tutorials:";
+    public static final String NOT_COMPATIBLE = "Not compatible:";
+    public static final String UNWANTED = "Unwanted:";
+    public static final String PREFERENCES = "Preferences:";
+    public static final String PAIR = "Pair:";
+    public static final String PARTIAL_ASSIGNMENTS = "Partial assignments:";
+
+    private Path filePath;
+    private String[] parsedData = new String[0];
 
     
     public InputFileParser(Path filepath){
-
-
+        this.filePath = filepath;
     }
     /**
      * Function that looks for the header, when it see it,
@@ -46,6 +56,40 @@ public class InputFileParser {
 
                 // TODO(shenukp1) Nov 23, 2026: now we want check which header we are at and then add that line
                 // to the appropriate header
+                switch (header) {
+                    case NAME:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case LECTURE_SLOTS:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case TUTORIAL_SLOTS:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case LECTURES:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case TUTORIALS:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case NOT_COMPATIBLE:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case UNWANTED:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case PREFERENCES:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case PAIR:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    case PARTIAL_ASSIGNMENTS:
+                        addHeader(commaSeparatedParts);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown section: " + header);
+                }
 
 
             }
@@ -77,6 +121,13 @@ public class InputFileParser {
             commaSeparatedParts[i] = commaSeparatedParts[i].strip().replaceAll("\\s+", " ");
         }
         return commaSeparatedParts;
+    }
+    private void addHeader(String[] parsedData){
+        this.parsedData = parsedData;
+    }
+
+    public String[] getParsedData() {
+        return this.parsedData;
     }
 
 }

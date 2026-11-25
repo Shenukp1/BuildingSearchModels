@@ -65,7 +65,6 @@ public class CLIParser {
     /**
      * Contains functions to get the value held within this object.
      */
-
     public Path getFile() {
         return file;
     }
