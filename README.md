@@ -14,9 +14,9 @@ Showcases how to run the set based search model. The following CLI command requi
 an text file(i.e., `input.txt`) and the rest being integer parameters.
 
 ```bash
-./run.sh SetBasedSearch filename Wminfilled Wpref Wpair Wsecdiff pen_lecturemin pen_tutorialmin pen_notpaired pen_section
+./run.sh run CPSC433F25Main filename Wminfilled Wpref Wpair Wsecdiff pen_lecturemin pen_tutorialmin pen_notpaired pen_section
 ```
-- SetBasedSearch is the name of the java file(i.e., `SetBasedSearch.java`) that contains a main function, which is the main entry point to run the program.
+- `CPSC433F25Main` is the Java class (`CPSC433F25Main.java`) containing the `main` method entry point.
 
 
 ### Running Java File Generally
@@ -25,7 +25,7 @@ Showcases how to run a java file generally. As in, following the instructions be
 your choosing.
 
 ```bash
-./run.sh run my.package.MyClass  # run a class with a main method
+./run.sh run my.package.MyClass [args...]  # run a class with a main method and optional arguments
 ```
 
 - `my.package` is only relevant if we create a directory within `src/main/java`. For example if we added a file

@@ -6,9 +6,11 @@ set -e
 IMAGE="cpsc433"
 CACHE="cpsc433-m2-cache"   # keeps Maven downloads between runs(beauty of caching)
 
-if [ "$1" = "run" ]; then
+if [ "$1" = "run" ] && [ -n "$2" ]; then
+    MAIN_CLASS="$2"
+    shift 2 # drop "run" and the class name so $* holds only the program args
     docker build -t "$IMAGE" .
-    docker run --rm -v "$CACHE:/root/.m2" "$IMAGE" mvn exec:java -Dexec.mainClass="$2"
+    docker run --rm -v "$CACHE:/root/.m2" "$IMAGE" mvn exec:java -Dexec.mainClass="$MAIN_CLASS" -Dexec.args="$*"
 
 elif [ "$1" = "test" ] && [ -n "$2" ]; then
     docker build -t "$IMAGE" .
@@ -22,6 +24,6 @@ else
     echo "Usage:"
     echo "  ./run.sh test                  run all tests"
     echo "  ./run.sh test MyTest           run one test class"
-    echo "  ./run.sh run my.package.Main   run a class with a main method"
+    echo "  ./run.sh run my.package.Main [args...]  run a class with a main method"
     exit 1
 fi

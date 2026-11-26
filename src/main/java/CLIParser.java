@@ -17,7 +17,7 @@ public class CLIParser {
     public CLIParser(String[] args) {
         // the spec says we need at most 9 arguments, which include the first
         // arg as the input text file and the rest being 8 other input integer parameters
-        if (args == null || args.length != EXPECTED_ARGS) {
+        if (args == null || args.length < EXPECTED_ARGS) {
             throw new IllegalArgumentException(
                 "Usage: java SetBasedSearch <filename> " +
                 "<Wminfilled> <Wpref> <Wpair> <Wsecdiff> " +
@@ -65,7 +65,6 @@ public class CLIParser {
     /**
      * Contains functions to get the value held within this object.
      */
-
     public Path getFile() {
         return file;
     }
