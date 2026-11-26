@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import models.Preference;
 import models.Slot;
 
 class InputFileParserTest {
@@ -146,12 +147,59 @@ class InputFileParserTest {
 
     @Test
     void parsesPreferencesSection() throws IOException {
+        // preferences checks that the course and its time slot exist first
         Path file = createTempInputFile("""
+                Lecture slots:
+                MO, 8:00, 3, 2, 1
+                Tutorial slots:
+                TU, 9:30, 2, 1, 0
+                Lectures:
+                CPSC 433 LEC 01, true
+                Tutorials:
+                CPSC 433 LEC 01 TUT 01, false
                 Preferences:
                 MO, 8:00, CPSC 433 LEC 01, 10
+                TU, 9:30, CPSC 433 LEC 01 TUT 01, 5
                 """);
         InputFileParser parser = new InputFileParser(file);
         assertDoesNotThrow(() -> parser.parseInputFile());
+
+        List<Preference> prefs = parser.getInputFileParsedData().preferences;
+        assertEquals(2, prefs.size());
+
+        assertEquals("CPSC 433 LEC 01", prefs.get(0).courseId);
+        assertEquals("MO, 8:00", prefs.get(0).slotTime);
+        assertEquals(10, prefs.get(0).preference);
+
+        assertEquals("CPSC 433 LEC 01 TUT 01", prefs.get(1).courseId);
+        assertEquals("TU, 9:30", prefs.get(1).slotTime);
+        assertEquals(5, prefs.get(1).preference);
+    }
+
+    @Test
+    void ignoresInvalidPreferences() throws IOException {
+        // all of the preferences should be ignored because of the following:
+        //  1. lecture does not have the right lecture slot(i.e. has 9am instead of 8am)
+        //  2. tutorial does not have the correct tut slot(i.e., 12:30pm instead of 9:30am)
+        //  3. simply cpsc 999 is an unknown course because it was not in the lecture heading
+
+        Path file = createTempInputFile("""
+                Lecture slots:
+                MO, 8:00, 3, 2, 1
+                Tutorial slots:
+                TU, 9:30, 2, 1, 0
+                Lectures:
+                CPSC 433 LEC 01, true
+                Tutorials:
+                CPSC 433 LEC 01 TUT 01, false
+                Preferences:
+                MO, 9:00, CPSC 433 LEC 01, 10
+                TU, 12:30, CPSC 433 LEC 01 TUT 01, 5
+                MO, 8:00, CPSC 999 LEC 01, 7
+                """);
+        InputFileParser parser = new InputFileParser(file);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+        assertTrue(parser.getInputFileParsedData().preferences.isEmpty());
     }
 
     @Test
@@ -319,8 +367,10 @@ class InputFileParserTest {
         assertTrue(data.unwanted.get("CPSC 433 LEC 01").contains("MO, 8:00"));
         assertTrue(data.pairs.get("CPSC 433 LEC 01").contains("CPSC 433 LEC 02"));
         assertTrue(data.partialAssignments.get("CPSC 433 LEC 01").contains("MO, 8:00"));
-
-        // TODO(shenukp1) Nov 25, 2026: need to add in preferences after that function is finished
+        assertEquals(1, data.preferences.size());
+        assertEquals("CPSC 433 LEC 01", data.preferences.get(0).courseId);
+        assertEquals("MO, 8:00", data.preferences.get(0).slotTime);
+        assertEquals(10, data.preferences.get(0).preference);
     }
 
     @Test

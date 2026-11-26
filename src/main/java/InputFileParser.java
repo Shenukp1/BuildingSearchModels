@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import models.Preference;
 import models.Slot;
 
 /**
@@ -217,7 +218,32 @@ public class InputFileParser {
      * a valid time slot, we can ignore it and we need to print it out.
      */
     public void addPreference(String[] parts){
-
+        String timeSlot = parts[0] + ", " + parts[1];
+        String courseId = parts[2];
+        int prefValue = Integer.parseInt(parts[3]);
+        // TODO(shenukp1) Nov 25, 2026: we need to double check if this is the right
+        // idea. As in, if we have it in the preferences header but not in the lecture
+        // header, then we dont count it?
+        // so if we do not have them as lecture that we consider within the lecture
+        boolean isLecture = this.inputFileParsedData.lectures.containsKey(courseId);
+        boolean isTutorial = this.inputFileParsedData.tutorials.containsKey(courseId);
+        if (isLecture && !partialSlotExist(timeSlot, this.inputFileParsedData.LEC)) {
+            System.out.println("Ignoring preference for Lecture={" + courseId + "} because there is no time slot={" + timeSlot+"}" );
+            return;
+        }
+        if (isTutorial && !partialSlotExist(timeSlot, this.inputFileParsedData.TUT)) {
+            System.out.println("Ignoring preference for Tutorial={" + courseId + "} because there is no time slot={" + timeSlot+"}" );
+            return;
+        }
+        // TODO(shenukp1) Nov 25, 2026: we need to double check if this is the right
+        // idea. As in, if we have it in the preferences header but not in the lecture
+        // header, then we dont count it?
+        if (!isLecture && !isTutorial) {
+            System.out.println("Ignoring preferences because unknown course: " + courseId);
+            return;
+        }
+        Preference pref = new Preference(courseId, timeSlot, prefValue);
+        this.inputFileParsedData.preferences.add(pref);
     }
 
     /**
@@ -246,6 +272,9 @@ public class InputFileParser {
         if (isTutorial && !partialSlotExist(timeSlot, this.inputFileParsedData.TUT)) {
             throw new IllegalArgumentException("Invalid partial assignment - For the Tutorial={" + courseId + "} there is no time slot={" + timeSlot+"}");
         }
+        // TODO(shenukp1) Nov 25, 2026: we need to double check if this is the right
+        // idea. As in, if we have it in the preferences header but not in the lecture
+        // header, then we dont count it?
         if (!isLecture && !isTutorial) {
             throw new IllegalArgumentException("Unknown course in partial assignment: " + courseId);
         }
