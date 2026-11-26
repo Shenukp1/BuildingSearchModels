@@ -1,12 +1,17 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import models.Slot;
 
 class InputFileParserTest {
 
@@ -26,53 +31,82 @@ class InputFileParserTest {
                 Example-name
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile); // because the default scenario throws in the switch statement
-        assertTrue(parser.getParsedData().length >= 1); // at least one item is contained if it was parsed correctly
+        assertDoesNotThrow(() -> parser.parseInputFile());
+        assertEquals("Example-name", parser.getInputFileParsedData().name);
     }
 
     @Test
     void parsesLectureSlotsSection() throws IOException {
         Path file = createTempInputFile("""
                 Lecture slots:
-                MO, 8:00, 3, 2
+                MO, 8:00, 3, 2, 1
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+
+        List<Slot> lecSlots = parser.getInputFileParsedData().slots.get(InputFileParsedData.LEC);
+        assertEquals(1, lecSlots.size());
+        assertEquals("MO, 8:00", lecSlots.get(0).timeSlot);
+        assertEquals(3, lecSlots.get(0).max);
+        assertEquals(2, lecSlots.get(0).min);
+        assertEquals(1, lecSlots.get(0).alMax);
     }
 
     @Test
     void parsesTutorialSlotsSection() throws IOException {
         Path file = createTempInputFile("""
                 Tutorial slots:
-                MO, 8:00, 2, 1
+                MO, 8:00, 2, 1, 0
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+
+        List<Slot> tutSlots = parser.getInputFileParsedData().slots.get(InputFileParsedData.TUT);
+        assertEquals(1, tutSlots.size());
+        assertEquals("MO, 8:00", tutSlots.get(0).timeSlot);
+        assertEquals(2, tutSlots.get(0).max);
+        assertEquals(1, tutSlots.get(0).min);
+        assertEquals(0, tutSlots.get(0).alMax);
+    }
+
+    @Test
+    void addTimeSlotThrowsForInvalidType() throws IOException {
+        Path file = createTempInputFile("");
+        InputFileParser parser = new InputFileParser(file);
+        String[] parts = {"MO", "8:00", "3", "2", "1"};
+        assertThrows(IllegalArgumentException.class, () -> parser.addTimeSlot(parts, "INVALID"));
     }
 
     @Test
     void parsesLecturesSection() throws IOException {
         Path file = createTempInputFile("""
                 Lectures:
-                CPSC 433 LEC 01
+                CPSC 433 LEC 01, true
+                CPSC 231 LEC 01, false
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+
+        assertEquals(2, parser.getInputFileParsedData().lectures.size());
+        assertTrue(parser.getInputFileParsedData().lectures.get("CPSC 433 LEC 01"));
+        assertFalse(parser.getInputFileParsedData().lectures.get("CPSC 231 LEC 01"));
     }
 
     @Test
     void parsesTutorialsSection() throws IOException {
         Path file = createTempInputFile("""
                 Tutorials:
-                CPSC 433 LEC 01 TUT 01
+                CPSC 433 LEC 01 TUT 01, true
+                CPSC 231 LEC 01 TUT 01, false
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+
+        assertEquals(2, parser.getInputFileParsedData().tutorials.size());
+        assertTrue(parser.getInputFileParsedData().tutorials.get("CPSC 433 LEC 01 TUT 01"));
+        assertFalse(parser.getInputFileParsedData().tutorials.get("CPSC 231 LEC 01 TUT 01"));
     }
+
 
     @Test
     void parsesNotCompatibleSection() throws IOException {
@@ -81,8 +115,8 @@ class InputFileParserTest {
                 CPSC 433 LEC 01, CPSC 433 LEC 01 TUT 01
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+
     }
 
     @Test
@@ -92,8 +126,8 @@ class InputFileParserTest {
                 CPSC 433 LEC 01, MO, 8:00
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+     
     }
 
     @Test
@@ -103,8 +137,8 @@ class InputFileParserTest {
                 MO, 8:00, CPSC 433 LEC 01, 10
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+ 
     }
 
     @Test
@@ -114,8 +148,8 @@ class InputFileParserTest {
                 CPSC 433 LEC 01, CPSC 433 LEC 02
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+        
     }
 
     @Test
@@ -125,8 +159,8 @@ class InputFileParserTest {
                 CPSC 433 LEC 01, MO, 8:00
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+      
     }
 
     @Test
@@ -135,15 +169,15 @@ class InputFileParserTest {
                 Name:
                 Example-name
                 Lecture slots:
-                MO, 8:00, 3, 2
+                MO, 8:00, 3, 2, 1
                 Tutorial slots:
-                MO, 8:00, 2, 1
+                MO, 8:00, 2, 1, 0
 
                 Lectures:
-                CPSC 433 LEC 01
+                CPSC 433 LEC 01, true
 
                 Tutorials:
-                CPSC 433 LEC 01 TUT 01
+                CPSC 433 LEC 01 TUT 01, false
 
                 Not compatible:
                 CPSC 433 LEC 01, CPSC 433 LEC 01 TUT 01
@@ -161,17 +195,27 @@ class InputFileParserTest {
                 CPSC 433 LEC 01, MO, 8:00
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
-        assertTrue(parser.getParsedData().length >= 1);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+
+        InputFileParsedData data = parser.getInputFileParsedData();
+        assertEquals("Example-name", data.name);
+        assertEquals(1, data.slots.get(InputFileParsedData.LEC).size());
+        assertEquals(1, data.slots.get(InputFileParsedData.TUT).size());
+        assertTrue(data.lectures.get("CPSC 433 LEC 01"));
+        assertFalse(data.tutorials.get("CPSC 433 LEC 01 TUT 01"));
+
+        // TODO(shenukp1) NOv 25, 2026: need to add in the rest after the functions are finished
+   
     }
 
     @Test
-    void returnsEmptyArrayWhenNoDataAfterHeader() throws IOException {
+    void returnsEmptyDataWhenNoDataAfterHeader() throws IOException {
         Path file = createTempInputFile("""
                 Name:
                 """);
         InputFileParser parser = new InputFileParser(file);
-        assertDoesNotThrow(parser::parseInputFile);
+        assertDoesNotThrow(() -> parser.parseInputFile());
+        assertEquals("", parser.getInputFileParsedData().name);
         assertEquals(0, parser.getParsedData().length);
     }
 }

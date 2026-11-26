@@ -3,8 +3,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import models.Slot;
+
 /**
  * Parses the input file given to the program to start the set based search on.
+ * 
+ * IMPORTANT(shenukp1) Nov 25, 2026: so technically we can handle some hard constraints here
+ * but maybe that is not the move. as in:
+ *  - if we see that lectures starting with CPSC 351 and/or CPSC 413, we have to schedule CPSC 851 and/or CPSC 913 into tut
  */
 public class InputFileParser {
     public static final String NAME = "Name:";
@@ -20,11 +26,12 @@ public class InputFileParser {
 
     private Path filePath;
     private InputFileParsedData inputFileParsedData; // contains all the parsed data
-    private String[] parsedData = new String[0];
+
 
     
     public InputFileParser(Path filepath){
         this.filePath = filepath;
+        this.inputFileParsedData = new InputFileParsedData();
     }
     /**
      * Function that looks for the header, when it see it,
@@ -62,31 +69,31 @@ public class InputFileParser {
                         this.inputFileParsedData.name = line;
                         break;
                     case LECTURE_SLOTS:
-                        addHeader(commaSeparatedParts);
+                        addTimeSlot(commaSeparatedParts, InputFileParsedData.LEC);
                         break;
                     case TUTORIAL_SLOTS:
-                        addHeader(commaSeparatedParts);
+                        addTimeSlot(commaSeparatedParts, InputFileParsedData.TUT);
                         break;
                     case LECTURES:
-                        addHeader(commaSeparatedParts);
+                        addLecture(commaSeparatedParts);
                         break;
                     case TUTORIALS:
-                        addHeader(commaSeparatedParts);
+                        addTutorial(commaSeparatedParts);
                         break;
                     case NOT_COMPATIBLE:
-                        addHeader(commaSeparatedParts);
+                    
                         break;
                     case UNWANTED:
-                        addHeader(commaSeparatedParts);
+            
                         break;
                     case PREFERENCES:
-                        addHeader(commaSeparatedParts);
+        
                         break;
                     case PAIR:
-                        addHeader(commaSeparatedParts);
+    
                         break;
                     case PARTIAL_ASSIGNMENTS:
-                        addHeader(commaSeparatedParts);
+
                         break;
                     default:
                         throw new IllegalArgumentException("Unknown section: " + header);
@@ -108,12 +115,38 @@ public class InputFileParser {
      * Function that places all the possible slots into a map where 
      * the key tell you if it is a tut or a lec. then the value
      * are the lec/tut slot data under the header from the input file.
-     * 
-     * WARNING(shenukp1) Nov 25, 2026: So in the spec(i.e., Problem file)
-     * it says that if we 
+     * WARNING(shenukp1) Nov 25, 2026: made these public so I can test them eventually
      */
-    public void addTimeSlots(String[] commaSeparatedParts,InputFileParsedData inputFileParsedData){
-
+    public void addTimeSlot(String[] parts, String type) {
+        if (!InputFileParsedData.LEC.equals(type) && !InputFileParsedData.TUT.equals(type)) {
+            throw new IllegalArgumentException("Not allowed that type. Choose between: " + InputFileParsedData.LEC + " or " + InputFileParsedData.TUT);
+        }
+        String timeSlot = parts[0] + ", " + parts[1]; // "MO, 8:00" was split so we need to bring it back together
+        int max = Integer.parseInt(parts[2]);
+        int min = Integer.parseInt(parts[3]);
+        int alMax = Integer.parseInt(parts[4]);
+        Slot slot = new Slot(timeSlot, max, min, alMax);
+        this.inputFileParsedData.slots.get(type).add(slot);
+    }
+    /**
+     * A function that adds lec into the InputFileParsedData.
+     * WARNING(shenukp1) Nov 25, 2026: made these public so I can test them eventually
+     */
+    public void addLecture(String[] parts) {
+        String courseId = parts[0];
+        boolean alRequired = Boolean.parseBoolean(parts[1]);
+        this.inputFileParsedData.lectures.put(courseId, alRequired);
+       
+    }
+    /**
+     * A function that add a tut.   
+     * WARNING(shenukp1) Nov 25, 2026: made these public so I can test them eventually
+     */
+    public void addTutorial(String[] parts) {
+        String courseId = parts[0];
+        boolean alRequired = Boolean.parseBoolean(parts[1]);
+        this.inputFileParsedData.tutorials.put(courseId, alRequired);
+        
     }
 
     /**
@@ -135,17 +168,11 @@ public class InputFileParser {
         }
         return commaSeparatedParts;
     }
-    private void addHeader(String[] parsedData){
-        this.parsedData = parsedData;
-    }
 
     public InputFileParsedData getInputFileParsedData(){
         return this.inputFileParsedData;
     }
 
-    public String[] getParsedData() {
-        return this.parsedData;
-    }
 
 }
 
