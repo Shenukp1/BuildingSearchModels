@@ -19,6 +19,7 @@ public class InputFileParser {
     public static final String PARTIAL_ASSIGNMENTS = "Partial assignments:";
 
     private Path filePath;
+    private InputFileParsedData inputFileParsedData; // contains all the parsed data
     private String[] parsedData = new String[0];
 
     
@@ -54,11 +55,11 @@ public class InputFileParser {
 
                 String[] commaSeparatedParts = parseCommaSeparatedLine(line);
 
-                // TODO(shenukp1) Nov 23, 2026: now we want check which header we are at and then add that line
-                // to the appropriate header
+                // based on the header, we can parse and place the data into its respective
+                // data structure 
                 switch (header) {
                     case NAME:
-                        addHeader(commaSeparatedParts);
+                        this.inputFileParsedData.name = line;
                         break;
                     case LECTURE_SLOTS:
                         addHeader(commaSeparatedParts);
@@ -104,6 +105,18 @@ public class InputFileParser {
     }
 
     /**
+     * Function that places all the possible slots into a map where 
+     * the key tell you if it is a tut or a lec. then the value
+     * are the lec/tut slot data under the header from the input file.
+     * 
+     * WARNING(shenukp1) Nov 25, 2026: So in the spec(i.e., Problem file)
+     * it says that if we 
+     */
+    public void addTimeSlots(String[] commaSeparatedParts,InputFileParsedData inputFileParsedData){
+
+    }
+
+    /**
      * Function that takes a data line, splits it by commas, and cleans up
      * any extra spaces in each part so only single spaces remain, then returns
      * the array of cleaned parts.
@@ -124,6 +137,10 @@ public class InputFileParser {
     }
     private void addHeader(String[] parsedData){
         this.parsedData = parsedData;
+    }
+
+    public InputFileParsedData getInputFileParsedData(){
+        return this.inputFileParsedData;
     }
 
     public String[] getParsedData() {
