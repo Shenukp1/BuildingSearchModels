@@ -119,6 +119,10 @@ public class InputFileParser {
      * the key tell you if it is a tut or a lec. then the value
      * are the lec/tut slot data under the header from the input file.
      * WARNING(shenukp1) Nov 25, 2026: made these public so I can test them eventually
+     * 
+     * Format from ProjectInput spec: 
+     *  - Lecture slots: Day, Start time, lecturemax, lecturemin, allecturemax
+     *  - Tutorial slots: Day, Start time, tutorialmax, tutorialmin, altutorialmax
      */
     public void addTimeSlot(String[] parts, String type) {
         if (!InputFileParsedData.LEC.equals(type) && !InputFileParsedData.TUT.equals(type)) {
@@ -134,6 +138,8 @@ public class InputFileParser {
     /**
      * A function that adds lec into the InputFileParsedData.
      * WARNING(shenukp1) Nov 25, 2026: made these public so I can test them eventually
+     * Format from ProjectInput spec: 
+     *  - Lecture Identifier, alrequired
      */
     public void addLecture(String[] parts) {
         String courseId = parts[0];
@@ -144,6 +150,9 @@ public class InputFileParser {
     /**
      * A function that add a tut.   
      * WARNING(shenukp1) Nov 25, 2026: made these public so I can test them eventually
+     * 
+     * Format from ProjectInput spec: 
+     *  - Tutorial Identifier, alrequired
      */
     public void addTutorial(String[] parts) {
         String courseId = parts[0];
@@ -152,6 +161,12 @@ public class InputFileParser {
         
     }
 
+    /**
+     * Format from ProjectInput spec: 
+     *  - Lecture Identifier, Lecture Identifier
+     *  - Lecture Identifier, Tutorial Identifier
+     *  - Tutorial Identifier, Tutorial Identifier
+     */
     public void addNotCompatible(String[] parts) {
         String a = parts[0];
         String b = parts[1];
@@ -161,6 +176,11 @@ public class InputFileParser {
         addToSetMap(this.inputFileParsedData.notCompatible, b, a);
     }
 
+    /**
+     * Format from ProjectInput spec: 
+     *  - Lecture Identifier, Slot day, Slot time
+     *  - Tutorial Identifier, Slot day, Slot time
+     */
     public void addUnwanted(String[] parts) {
 
         String courseId = parts[0];
@@ -172,10 +192,34 @@ public class InputFileParser {
         addToSetMap(this.inputFileParsedData.unwanted, courseId, timeSlot);
     }
     
+    /**
+     * Format from ProjectInput spec: 
+     *  - Lecture Identifier, Lecture Identifier
+     *  - Lecture Identifier, Tutorial Identifier
+     *  - Tutorial Identifier, Tutorial Identifier
+     */
     public void addPair(String[] parts) {
         String a = parts[0];
         String b = parts[1];
         addToSetMap(this.inputFileParsedData.pairs, a, b);
+    }
+
+    /**
+     * Format from ProjectInput spec: 
+     *  - Slot day, Slot time, Lecture Identifier, Preference value
+     *  - Slot day, Slot time, Tutorial Identifier, Preference value
+     */
+    public void addPreference(){
+
+    }
+
+    /**
+     * Format from ProjectInput spec: 
+     *  - Lecture Identifier, Slot day, Slot time
+     *  - Tutorial Identifier, Slot day, Slot time
+     */
+    public void addPartialAssignments(){
+
     }
 
     /**
