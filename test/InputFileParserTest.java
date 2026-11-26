@@ -170,12 +170,94 @@ class InputFileParserTest {
 
     @Test
     void parsesPartialAssignmentsSection() throws IOException {
+        // partial assignments checks that the course and its time slot exist first
         Path file = createTempInputFile("""
+                Lecture slots:
+                MO, 8:00, 3, 2, 1
+                Tutorial slots:
+                TU, 9:30, 2, 1, 0
+                Lectures:
+                CPSC 433 LEC 01, true
+                Tutorials:
+                CPSC 433 LEC 01 TUT 01, false
                 Partial assignments:
                 CPSC 433 LEC 01, MO, 8:00
+                CPSC 433 LEC 01 TUT 01, TU, 9:30
                 """);
         InputFileParser parser = new InputFileParser(file);
         assertDoesNotThrow(() -> parser.parseInputFile());
+
+        HashMap<String, Set<String>> partialAssignments = parser.getInputFileParsedData().partialAssignments;
+        assertTrue(partialAssignments.get("CPSC 433 LEC 01").contains("MO, 8:00"));
+        assertTrue(partialAssignments.get("CPSC 433 LEC 01 TUT 01").contains("TU, 9:30"));
+    }
+
+    @Test
+    void addPartialAssignmentThrowsWhenLectureSlotMissing() throws IOException {
+        // lecture slot is 9am but partial is 8am
+        Path file = createTempInputFile("""
+                Lecture slots:
+                MO, 9:00, 3, 2, 1
+                Tutorial slots:
+                TU, 9:30, 2, 1, 0
+                Lectures:
+                CPSC 433 LEC 01, true
+                Tutorials:
+                CPSC 433 LEC 01 TUT 01, false
+                Partial assignments:
+                CPSC 433 LEC 01, MO, 8:00
+                CPSC 433 LEC 01 TUT 01, TU, 9:30
+                """);
+        InputFileParser parser = new InputFileParser(file);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () ->  parser.parseInputFile()
+        );
+        assertTrue(ex.getMessage().contains("Lecture"));// since the message contains Lecture={}
+    }
+
+    @Test
+    void addPartialAssignmentThrowsWhenTutorialSlotMissing() throws IOException {
+        // partial assignment is at 9:30 but tut slot available is at 12:30
+        Path file = createTempInputFile("""
+                Tutorial slots:
+                TU, 12:30, 2, 1, 0
+                Tutorials:
+                CPSC 433 LEC 01 TUT 01, false
+                Partial assignments:
+                CPSC 433 LEC 01 TUT 01, TU, 9:30
+                """);
+        InputFileParser parser = new InputFileParser(file);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () ->  parser.parseInputFile()
+        );
+        assertTrue(ex.getMessage().contains("Tutorial"));
+    }
+
+    @Test
+    void addPartialAssignmentThrowsWhenCourseUnknown() throws IOException {
+        // since CPSC 999 is not under lec, this will fail. assuming 
+        // I am considering the WARNING comment to be true.
+        Path file = createTempInputFile("""
+                Lecture slots:
+                MO, 8:00, 3, 2, 1
+                Tutorial slots:
+                TU, 9:30, 2, 1, 0
+                Lectures:
+                CPSC 433 LEC 01, true
+                Tutorials:
+                CPSC 433 LEC 01 TUT 01, false
+                Partial assignments:
+                CPSC 999 LEC 01, MO, 8:00
+                CPSC 999 LEC 01 TUT 01, TU, 9:30
+                """);
+        InputFileParser parser = new InputFileParser(file);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () ->  parser.parseInputFile()
+        );
+        assertTrue(ex.getMessage().contains("Unknown course"));
     }
 
     @Test
@@ -236,8 +318,9 @@ class InputFileParserTest {
         assertTrue(data.notCompatible.get("CPSC 433 LEC 01 TUT 01").contains("CPSC 433 LEC 01"));
         assertTrue(data.unwanted.get("CPSC 433 LEC 01").contains("MO, 8:00"));
         assertTrue(data.pairs.get("CPSC 433 LEC 01").contains("CPSC 433 LEC 02"));
+        assertTrue(data.partialAssignments.get("CPSC 433 LEC 01").contains("MO, 8:00"));
 
-        // TODO(shenukp1) Nov 25, 2026: need to add in preferences and partial assignments after those functions are finished
+        // TODO(shenukp1) Nov 25, 2026: need to add in preferences after that function is finished
     }
 
     @Test

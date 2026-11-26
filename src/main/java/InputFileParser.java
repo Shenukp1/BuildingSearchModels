@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import models.Slot;
@@ -90,13 +91,13 @@ public class InputFileParser {
                         addUnwanted(commaSeparatedParts);
                         break;
                     case PREFERENCES:
-                        
+                        addPreference(commaSeparatedParts);
                         break;
                     case PAIR:
                         addPair(commaSeparatedParts);
                         break;
                     case PARTIAL_ASSIGNMENTS:
-
+                        addPartialAssignments(commaSeparatedParts);
                         break;
                     default:
                         throw new IllegalArgumentException("Unknown section: " + header);
@@ -104,6 +105,9 @@ public class InputFileParser {
 
 
             }
+        }
+        catch (IllegalArgumentException e) {
+            throw e;// so we can catch any IllegalArgumentException and prop it up
         }
         catch (IOException e) {
             System.err.println("File I/O Error: " + e.getMessage());
@@ -208,8 +212,11 @@ public class InputFileParser {
      * Format from ProjectInput spec: 
      *  - Slot day, Slot time, Lecture Identifier, Preference value
      *  - Slot day, Slot time, Tutorial Identifier, Preference value
+     * 
+     * The spec(i.e. ProjectInput) says that if a preference does not have
+     * a valid time slot, we can ignore it and we need to print it out.
      */
-    public void addPreference(){
+    public void addPreference(String[] parts){
 
     }
 
@@ -217,9 +224,46 @@ public class InputFileParser {
      * Format from ProjectInput spec: 
      *  - Lecture Identifier, Slot day, Slot time
      *  - Tutorial Identifier, Slot day, Slot time
+     * 
+     * The spec(i.e. ProjectInput) says that if there is a lec or a tut that
+     * does not have a lec slot or a tut slot for the slots given. then we
+     * terminate and and show an error message.
      */
-    public void addPartialAssignments(){
+    public void addPartialAssignments(String[] parts){
+        String courseId = parts[0];
+        String timeSlot = parts[1] + ", " + parts[2];
+        // WARNING(shenukp1) Nov 25, 2026: is it the case that the input file, if it has a 
+        // partial assign data, it can only be for the lecture under the lecture slot header?
+        // first we check if the partial assignment is a tut or a lec
+        boolean isLecture = this.inputFileParsedData.lectures.containsKey(courseId);
+        boolean isTutorial = this.inputFileParsedData.tutorials.containsKey(courseId);
 
+        // then based on which it is, we can see if we have a time slot for the partial assignment.
+        // if not, we throw
+        if (isLecture && !partialSlotExist(timeSlot, this.inputFileParsedData.LEC)) {
+            throw new IllegalArgumentException("Invalid partial assignment - For the Lecture={" + courseId + "} there is no time slot={" + timeSlot+"}");
+        }
+        if (isTutorial && !partialSlotExist(timeSlot, this.inputFileParsedData.TUT)) {
+            throw new IllegalArgumentException("Invalid partial assignment - For the Tutorial={" + courseId + "} there is no time slot={" + timeSlot+"}");
+        }
+        if (!isLecture && !isTutorial) {
+            throw new IllegalArgumentException("Unknown course in partial assignment: " + courseId);
+        }
+        // TODO(shenukp1) Nov 25, 2026: see if we should flip
+        addToSetMap(this.inputFileParsedData.partialAssignments, courseId, timeSlot);
+    }
+    /**
+     * Need a function to check for partialAssignment if a timeslot exist for
+     * the lec or tut. if we do, then we return true, otherwise false.
+     */
+    public boolean partialSlotExist(String timeSlot, String type){
+        List<Slot> slotList = this.inputFileParsedData.slots.get(type);
+        for (Slot s : slotList) {
+            if (s.timeSlot.equals(timeSlot)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
