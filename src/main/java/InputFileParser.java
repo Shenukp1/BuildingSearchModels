@@ -2,6 +2,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import models.Slot;
 
@@ -81,16 +84,16 @@ public class InputFileParser {
                         addTutorial(commaSeparatedParts);
                         break;
                     case NOT_COMPATIBLE:
-                    
+                        addNotCompatible(commaSeparatedParts);
                         break;
                     case UNWANTED:
-            
+                        addUnwanted(commaSeparatedParts);
                         break;
                     case PREFERENCES:
-        
+                        
                         break;
                     case PAIR:
-    
+                        addPair(commaSeparatedParts);
                         break;
                     case PARTIAL_ASSIGNMENTS:
 
@@ -149,6 +152,32 @@ public class InputFileParser {
         
     }
 
+    public void addNotCompatible(String[] parts) {
+        String a = parts[0];
+        String b = parts[1];
+        // the spec says it is symmetric. as in, if LEC A is not compatible with LEC B
+        // the the opposite is true too 
+        addToSetMap(this.inputFileParsedData.notCompatible, a, b);
+        addToSetMap(this.inputFileParsedData.notCompatible, b, a);
+    }
+
+    public void addUnwanted(String[] parts) {
+
+        String courseId = parts[0];
+        // because we split it by comma, we need to put it back together
+        String timeSlot = parts[1] + ", " + parts[2];
+
+        // TODO(shenukp1) Nov 25, 2026: consider if we can possibly flip timeslot and course id,
+        // because then we simply search "for time slot x, what is unwanted"
+        addToSetMap(this.inputFileParsedData.unwanted, courseId, timeSlot);
+    }
+    
+    public void addPair(String[] parts) {
+        String a = parts[0];
+        String b = parts[1];
+        addToSetMap(this.inputFileParsedData.pairs, a, b);
+    }
+
     /**
      * Function that takes a data line, splits it by commas, and cleans up
      * any extra spaces in each part so only single spaces remain, then returns
@@ -167,6 +196,18 @@ public class InputFileParser {
             commaSeparatedParts[i] = commaSeparatedParts[i].strip().replaceAll("\\s+", " ");
         }
         return commaSeparatedParts;
+    }
+    /**
+     * A function to make it easy to create a new key and a set to it
+     * if that key does not exist.
+     * 
+     * This function will be used to add to: not-compatible, unwanted, partial assignment, pre-assigned, and pair
+     */
+    public void addToSetMap(HashMap<String, Set<String>> map, String key, String value) {
+        if (!map.containsKey(key)) {
+            map.put(key, new HashSet<>());
+        }
+        map.get(key).add(value);
     }
 
     public InputFileParsedData getInputFileParsedData(){

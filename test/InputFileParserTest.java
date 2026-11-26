@@ -1,7 +1,9 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,7 +25,10 @@ class InputFileParserTest {
         Files.writeString(file, content);
         return file;
     }
-
+    /**
+     * For all the test below we are simply checking if the hashmaps have 
+     * the values parsed into them.
+     */
     @Test
     void parsesNameSection() throws IOException {
         Path file = createTempInputFile("""
@@ -117,6 +122,10 @@ class InputFileParserTest {
         InputFileParser parser = new InputFileParser(file);
         assertDoesNotThrow(() -> parser.parseInputFile());
 
+        // should be symmetric, so both directions should be in the map
+        HashMap<String, Set<String>> notCompatible = parser.getInputFileParsedData().notCompatible;
+        assertTrue(notCompatible.get("CPSC 433 LEC 01").contains("CPSC 433 LEC 01 TUT 01"));
+        assertTrue(notCompatible.get("CPSC 433 LEC 01 TUT 01").contains("CPSC 433 LEC 01"));
     }
 
     @Test
@@ -124,10 +133,15 @@ class InputFileParserTest {
         Path file = createTempInputFile("""
                 Unwanted:
                 CPSC 433 LEC 01, MO, 8:00
+                CPSC 433 LEC 01, TU, 9:30
                 """);
         InputFileParser parser = new InputFileParser(file);
         assertDoesNotThrow(() -> parser.parseInputFile());
-     
+
+        Set<String> unwantedSlots = parser.getInputFileParsedData().unwanted.get("CPSC 433 LEC 01");
+        assertEquals(2, unwantedSlots.size());
+        assertTrue(unwantedSlots.contains("MO, 8:00"));
+        assertTrue(unwantedSlots.contains("TU, 9:30"));
     }
 
     @Test
@@ -138,7 +152,6 @@ class InputFileParserTest {
                 """);
         InputFileParser parser = new InputFileParser(file);
         assertDoesNotThrow(() -> parser.parseInputFile());
- 
     }
 
     @Test
@@ -149,7 +162,10 @@ class InputFileParserTest {
                 """);
         InputFileParser parser = new InputFileParser(file);
         assertDoesNotThrow(() -> parser.parseInputFile());
-        
+
+        Set<String> pairedCourses = parser.getInputFileParsedData().pairs.get("CPSC 433 LEC 01");
+        assertEquals(1, pairedCourses.size());
+        assertTrue(pairedCourses.contains("CPSC 433 LEC 02"));
     }
 
     @Test
@@ -160,7 +176,20 @@ class InputFileParserTest {
                 """);
         InputFileParser parser = new InputFileParser(file);
         assertDoesNotThrow(() -> parser.parseInputFile());
-      
+    }
+
+    @Test
+    void addToSetMapCreatesAndAddsToSet() throws IOException {
+        Path file = createTempInputFile("");
+        InputFileParser parser = new InputFileParser(file);
+        HashMap<String, Set<String>> map = new HashMap<>();
+
+        parser.addToSetMap(map, "CPSC 433 LEC 01", "MO, 8:00");
+        parser.addToSetMap(map, "CPSC 433 LEC 01", "TU, 9:30");
+
+        assertEquals(2, map.get("CPSC 433 LEC 01").size());
+        assertTrue(map.get("CPSC 433 LEC 01").contains("MO, 8:00"));
+        assertTrue(map.get("CPSC 433 LEC 01").contains("TU, 9:30"));
     }
 
     @Test
@@ -203,9 +232,12 @@ class InputFileParserTest {
         assertEquals(1, data.slots.get(InputFileParsedData.TUT).size());
         assertTrue(data.lectures.get("CPSC 433 LEC 01"));
         assertFalse(data.tutorials.get("CPSC 433 LEC 01 TUT 01"));
+        assertTrue(data.notCompatible.get("CPSC 433 LEC 01").contains("CPSC 433 LEC 01 TUT 01"));
+        assertTrue(data.notCompatible.get("CPSC 433 LEC 01 TUT 01").contains("CPSC 433 LEC 01"));
+        assertTrue(data.unwanted.get("CPSC 433 LEC 01").contains("MO, 8:00"));
+        assertTrue(data.pairs.get("CPSC 433 LEC 01").contains("CPSC 433 LEC 02"));
 
-        // TODO(shenukp1) NOv 25, 2026: need to add in the rest after the functions are finished
-   
+        // TODO(shenukp1) Nov 25, 2026: need to add in preferences and partial assignments after those functions are finished
     }
 
     @Test
@@ -215,7 +247,10 @@ class InputFileParserTest {
                 """);
         InputFileParser parser = new InputFileParser(file);
         assertDoesNotThrow(() -> parser.parseInputFile());
-        assertEquals("", parser.getInputFileParsedData().name);
-        assertEquals(0, parser.getParsedData().length);
+
+        InputFileParsedData data = parser.getInputFileParsedData();
+        assertEquals("", data.name);
+        assertTrue(data.lectures.isEmpty());
+        assertTrue(data.tutorials.isEmpty());
     }
 }
