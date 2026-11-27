@@ -11,6 +11,9 @@ public class HardConstraintChecker{
     }
 
     /**
+     * I think the idea is that if we cant check for them, we return true, that way
+     * we can use this within the or-tree
+     * 
      * isValid class that checks the following hard constraints:
      *  1. checks the capacity lecturemax, tutorialmax, allecturemax, and altutorialmax.
      *     and if alRequired is true for tut or lec, thats when we consider almax
