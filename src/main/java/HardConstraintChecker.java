@@ -1,3 +1,8 @@
+
+import java.util.HashMap;
+
+import models.Schedule;
+
 public class HardConstraintChecker{
 
     /**
@@ -32,6 +37,60 @@ public class HardConstraintChecker{
      *     cpsc 913 cannot overlap any lec/tutorial of cpsc 413
      *  
      */
+    public boolean isValid(Schedule schedule){
+        // if we fail one of the check, we simply return false,
+        // if not we return true
 
+        return true;
+    }
+    /**
+     * This function simply loops through the schedule and grabs a slot,
+     * for that slot, it will increase its count if a lec/tut is put into it.
+     * If it reaches the max, we terminate.
+     */
+    public boolean checkLecAndTutCapacity(Schedule schedule){
+        // to keep count of the lec/tut/al 
+        HashMap<String, Integer> lectureCount = new HashMap<>();
+        HashMap<String, Integer> lectureAlCount = new HashMap<>();
+        HashMap<String, Integer> tutorialCount = new HashMap<>();
+        HashMap<String, Integer> tutorialCountAlCount = new HashMap<>();
+
+        // loop through the schedule we have and increment count
+        // if we reach max, we return false
+        for( String lecOrTutId : schedule.assign.keySet()){
+            String timeSlot = schedule.assign.get(lecOrTutId);
+            // I would assume that if the timeslot does not exist
+            // something went wrong
+            if(timeSlot == null){
+                throw new NullPointerException("Should not happen: for the following lec/tut={"+lecOrTutId+"}, the time slot is null.");
+            }
+            // we need to check if it is a tutorial or lecture
+
+            // check for that timeSlot, do we have a current count
+    
+
+        }
+
+
+        return true;
+
+    }
+
+    /**
+     * Helper functions
+     */
+    // TODO(shenukp1) Nov 27, 2026: I use this 
+    public boolean isLecture(String courseId) {
+        return data.lectures.containsKey(courseId);
+    }
+    public boolean isTutorial(String courseId) {
+        // WARNING(shenukp1) Nov 27, 2026: the input problem spec says we add this
+        // when we have certain lec but these are tutorials so we need to
+        // check in the tutorial section
+        if (courseId.startsWith("CPSC 851") || courseId.startsWith("CPSC 913")) {
+            return true;
+        }
+        return data.tutorials.containsKey(courseId);
+    }
 
 }

@@ -150,8 +150,28 @@ public class InputFileParser {
         String courseId = parts[0];
         boolean alRequired = Boolean.parseBoolean(parts[1]);
         this.inputFileParsedData.lectures.put(courseId, alRequired);
-       
+
+        // the input problem spec says that if there is cpsc 351 we need to add
+        // cpsc 851, and the same for cpsc 413, we need to add cpsc 913
+        if (courseId.startsWith("CPSC 351")) {
+            triggerSpecialTutorial("CPSC 851", courseId);
+        } else if (courseId.startsWith("CPSC 413")) {
+            triggerSpecialTutorial("CPSC 913", courseId);
+        }
     }
+
+    /**
+     * This function add cpsc 851 or cpsc 913 into the tut slot TU, 18:00(as stated in 
+     * the problem spec) but it is the case that 
+     */
+    private void triggerSpecialTutorial(String specialTut, String lectureId) {
+        if (!this.inputFileParsedData.tutorials.containsKey(specialTut)) {
+            this.inputFileParsedData.tutorials.put(specialTut, false);
+            addPartialAssignments(new String[]{specialTut, "TU", "18:00"});
+        }
+        addNotCompatible(new String[]{specialTut, lectureId});
+    }
+
     /**
      * A function that add a tut.   
      * WARNING(shenukp1) Nov 25, 2026: made these public so I can test them eventually
@@ -163,7 +183,14 @@ public class InputFileParser {
         String courseId = parts[0];
         boolean alRequired = Boolean.parseBoolean(parts[1]);
         this.inputFileParsedData.tutorials.put(courseId, alRequired);
-        
+
+        // since cpsc 351 and cpsc 413 can have tut, according to the spec, we need to make sure 
+        // they cannot be scheduled into the time slot that cpsc 851 and cspc 913 are in.
+        if (courseId.startsWith("CPSC 351") && this.inputFileParsedData.tutorials.containsKey("CPSC 851")) {
+            addNotCompatible(new String[]{"CPSC 851", courseId});
+        } else if (courseId.startsWith("CPSC 413") && this.inputFileParsedData.tutorials.containsKey("CPSC 913")) {
+            addNotCompatible(new String[]{"CPSC 913", courseId});
+        }
     }
 
     /**
