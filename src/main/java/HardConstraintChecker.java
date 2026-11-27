@@ -1,7 +1,9 @@
 
 import java.util.HashMap;
+import java.util.List;
 
 import models.Schedule;
+import models.Slot;
 
 public class HardConstraintChecker{
 
@@ -9,10 +11,29 @@ public class HardConstraintChecker{
      * I think the idea is that we give it all the inputs and that will serve
      * as information to check
      */
+    public final int INCREASE_COURSE_COUNT =1;
     public InputFileParsedData data;
+    // A simple way to look up the Slot object via slot key
+    private HashMap<String, Slot> lectureSlotMap;
+    private HashMap<String, Slot> tutorialSlotMap;
 
     public HardConstraintChecker(InputFileParsedData data){
         this.data = data;
+        this.lectureSlotMap = new HashMap<>();
+        this.tutorialSlotMap = new HashMap<>();
+        // populating the slot maps for fast look ups
+        List<Slot> lecSlots = data.slots.get(InputFileParsedData.LEC);
+        if (lecSlots != null) {
+            for (Slot s : lecSlots) {
+                this.lectureSlotMap.put(s.timeSlot, s);
+            }
+        }
+        List<Slot> tutSlots = data.slots.get(InputFileParsedData.TUT);
+        if (tutSlots != null) {
+            for (Slot s : tutSlots) {
+                this.tutorialSlotMap.put(s.timeSlot, s);
+            }
+        }
     }
 
     /**
@@ -40,6 +61,7 @@ public class HardConstraintChecker{
     public boolean isValid(Schedule schedule){
         // if we fail one of the check, we simply return false,
         // if not we return true
+        if(!checkLecAndTutCapacity(schedule)) return false;
 
         return true;
     }
@@ -65,9 +87,40 @@ public class HardConstraintChecker{
                 throw new NullPointerException("Should not happen: for the following lec/tut={"+lecOrTutId+"}, the time slot is null.");
             }
             // we need to check if it is a tutorial or lecture
+            if(isLecture(lecOrTutId)){
+                Slot slot = lectureSlotMap.get(timeSlot);
+
+                int newLecCountTotal = lectureCount.getOrDefault(timeSlot, 0) + INCREASE_COURSE_COUNT;
+                if (newLecCountTotal > slot.max) return false; // we hit the max, hard constraint fails
+                lectureCount.put(timeSlot, newLecCountTotal); // else, we increase the count
+
+                // if it is Active learning, then we need to check the count of that too
+                if(data.lectures.getOrDefault(lecOrTutId, false)){
+                    int newAlTotal = lectureAlCount.getOrDefault(timeSlot, 0) + 1;
+                    if (newAlTotal > slot.alMax) return false;
+                    lectureAlCount.put(timeSlot, newAlTotal);
+                }
+
+            }
+            else if (isTutorial(lecOrTutId)) {
+                Slot slot = tutorialSlotMap.get(timeSlot);
+
+                int newTutCountTotal = tutorialCount.getOrDefault(timeSlot, 0) + INCREASE_COURSE_COUNT;
+                if (newTutCountTotal > slot.max) return false; // we hit the max, hard constraint fails
+                tutorialCount.put(timeSlot, newTutCountTotal); // else, we increase the count
+                // if it is Active learning, then we need to check the count of that too
+                if (data.tutorials.getOrDefault(lecOrTutId, false)) {
+                    int newAlTotal = tutorialCountAlCount.getOrDefault(timeSlot, 0) + INCREASE_COURSE_COUNT;
+                    if (newAlTotal > slot.alMax) return false;
+                    tutorialCountAlCount.put(timeSlot, newAlTotal);
+                }
+                
+            } else {
+                throw new IllegalArgumentException("The following course={"+lecOrTutId+"} is not a valid course based on what we parsed.");
+            }
 
             // check for that timeSlot, do we have a current count
-    
+
 
         }
 
