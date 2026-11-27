@@ -208,4 +208,54 @@ class HardConstraintCheckerTest {
 
         assertFalse(checker.isValid(schedule));
     }
+
+
+
+    /**
+     * Constraint 3: unwanted 
+     * Checking if a lec or tut is placed into an unwanted slot
+     */
+    @Test
+    void validWhenCoursesNotInUnwantedSlots() throws IOException {
+        HardConstraintChecker checker = createChecker(BASE_INPUT + """
+                Unwanted:
+                CPSC 231 LEC 01, MO, 8:00
+                CPSC 231 LEC 02 TUT 01, MO, 9:00
+                """);
+        Schedule schedule = new Schedule();
+
+        // if we place them in slots that are not in their unwanted list, thus it should be valid
+        schedule.assign.put("CPSC 231 LEC 01", "MO, 9:00");
+        schedule.assign.put("CPSC 231 LEC 02 TUT 01", "MO, 8:00");
+
+        assertTrue(checker.isValid(schedule));
+    }
+
+    @Test
+    void failsWhenLectureInUnwantedSlot() throws IOException {
+        HardConstraintChecker checker = createChecker(BASE_INPUT + """
+                Unwanted:
+                CPSC 231 LEC 01, MO, 8:00
+                """);
+        Schedule schedule = new Schedule();
+
+        // we put the lec in MO, 8:00 which is unwanted, thus this should fail
+        schedule.assign.put("CPSC 231 LEC 01", "MO, 8:00");
+
+        assertFalse(checker.isValid(schedule));
+    }
+
+    @Test
+    void failsWhenTutorialInUnwantedSlot() throws IOException {
+        HardConstraintChecker checker = createChecker(BASE_INPUT + """
+                Unwanted:
+                CPSC 231 LEC 01 TUT 01, MO, 9:00
+                """);
+        Schedule schedule = new Schedule();
+
+        // we put the tut in MO, 9:00 which is unwanted, thus this should fail
+        schedule.assign.put("CPSC 231 LEC 01 TUT 01", "MO, 9:00");
+
+        assertFalse(checker.isValid(schedule));
+    }
 }

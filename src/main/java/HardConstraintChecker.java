@@ -64,6 +64,7 @@ public class HardConstraintChecker{
         // if not we return true
         if(!checkLecAndTutCapacity(schedule)) return false;
         if(!checkPartialAssignments(schedule)) return false;
+        if(!checkUnwanted(schedule)) return false;
 
         return true;
     }
@@ -149,6 +150,22 @@ public class HardConstraintChecker{
             Set<String> requiredSlots = data.partialAssignments.get(courseId);
             if (!requiredSlots.contains(assignedSlot)) {
                 return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Hard constraint 3: Unwanted checker
+     */
+    public boolean checkUnwanted(Schedule schedule) {
+        for (String courseId : schedule.assign.keySet()) {
+            String slotTime = schedule.assign.get(courseId);
+            if (slotTime == null) continue;
+            if (data.unwanted.containsKey(courseId)) {
+                if (data.unwanted.get(courseId).contains(slotTime)) {
+                    return false;
+                }
             }
         }
         return true;
