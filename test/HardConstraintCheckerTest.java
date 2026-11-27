@@ -68,12 +68,9 @@ class HardConstraintCheckerTest {
         assertTrue(checker.isValid(schedule));
     }
 
-    // =========================================================
-    // Constraint 1: Lecture & Tutorial Capacity (max and alMax)
-    // =========================================================
 
     /**
-     *  Checking Lecture & Tutorial Capacity
+     *  Constraint 1: Checking Lecture & Tutorial Capacity
      */
     @Test
     void validWhenWithinLectureAndTutorialCapacity() throws IOException {
@@ -161,5 +158,54 @@ class HardConstraintCheckerTest {
         schedule.assign.put("CPSC 231 LEC 01", null);
 
         assertThrows(NullPointerException.class, () -> checker.isValid(schedule));
+    }
+
+  
+    /**
+     *  Constraint 2: Partial Assignments
+     */
+
+    @Test
+    void validWhenPartialAssignmentsMatchRequiredSlots() throws IOException {
+        // we just add in addition to the base input to consider the partial assignment header
+        HardConstraintChecker checker = createChecker(BASE_INPUT + """
+                Partial assignments:
+                CPSC 231 LEC 01, MO, 8:00
+                CPSC 231 LEC 02 TUT 01, MO, 9:00
+                """);
+        Schedule schedule = new Schedule();
+
+        schedule.assign.put("CPSC 231 LEC 01", "MO, 8:00");
+        schedule.assign.put("CPSC 231 LEC 02 TUT 01", "MO, 9:00");
+
+        assertTrue(checker.isValid(schedule));
+    }
+
+    @Test
+    void failsWhenPartialAssignmentInWrongSlot() throws IOException {
+        HardConstraintChecker checker = createChecker(BASE_INPUT + """
+                Partial assignments:
+                CPSC 231 LEC 01, MO, 8:00
+                """);
+        Schedule schedule = new Schedule();
+
+        // requires cpsc 231 in MO, 8:00, but placed in MO, 9:00
+        schedule.assign.put("CPSC 231 LEC 01", "MO, 9:00");
+
+        assertFalse(checker.isValid(schedule));
+    }
+
+    @Test
+    void failsWhenPartialAssignmentIsMissingFromSchedule() throws IOException {
+        HardConstraintChecker checker = createChecker(BASE_INPUT + """
+                Partial assignments:
+                CPSC 231 LEC 01, MO, 8:00
+                """);
+        Schedule schedule = new Schedule();
+
+        // CPSC 231 LEC 01 was never assigned in the schedule, instead was lec 2
+        schedule.assign.put("CPSC 231 LEC 02", "MO, 8:00");
+
+        assertFalse(checker.isValid(schedule));
     }
 }

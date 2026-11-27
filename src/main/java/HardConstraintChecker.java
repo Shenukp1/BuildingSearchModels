@@ -1,6 +1,7 @@
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import models.Schedule;
 import models.Slot;
@@ -11,7 +12,7 @@ public class HardConstraintChecker{
      * I think the idea is that we give it all the inputs and that will serve
      * as information to check
      */
-    public final int INCREASE_COURSE_COUNT =1;
+    public final int INCREASE_COURSE_COUNT = 1;
     public InputFileParsedData data;
     // A simple way to look up the Slot object via slot key
     private HashMap<String, Slot> lectureSlotMap;
@@ -62,10 +63,12 @@ public class HardConstraintChecker{
         // if we fail one of the check, we simply return false,
         // if not we return true
         if(!checkLecAndTutCapacity(schedule)) return false;
+        if(!checkPartialAssignments(schedule)) return false;
 
         return true;
     }
     /**
+     * Hard Constraint 1: Capacity check
      * This function simply loops through the schedule and grabs a slot,
      * for that slot, it will increase its count if a lec/tut is put into it.
      * If it reaches the max, we terminate.
@@ -127,6 +130,28 @@ public class HardConstraintChecker{
 
         return true;
 
+    }
+
+    /**
+     * Hard Constraint 2:
+     * 
+     * Checking to see if we have partial assignment within the schedule
+     */
+    public boolean checkPartialAssignments(Schedule schedule) {
+        for (String courseId : data.partialAssignments.keySet()) {
+            
+            String assignedSlot = schedule.assign.get(courseId);
+            // if we have not set the partial assignment, then we do not meet the hard constraints
+            if (assignedSlot == null) return false;
+
+            // if we have a course id, there must be a timeslot and that timeslot
+            // should be the same as the assignedSlot
+            Set<String> requiredSlots = data.partialAssignments.get(courseId);
+            if (!requiredSlots.contains(assignedSlot)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
