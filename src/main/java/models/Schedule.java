@@ -2,7 +2,7 @@
 package models;
 import java.util.HashMap;
 
-class Schedule {
+public class Schedule {
     // maps "CPSC 231 LEC 01" to the time "MO, 8:00"
     public HashMap<String, String> assign;
     public int evalScore = -1; // since 0 is the best technically, so we will use negative -1 as the inital
